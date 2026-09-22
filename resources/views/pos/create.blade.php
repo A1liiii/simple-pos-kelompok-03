@@ -7,10 +7,12 @@
 
 <div
     x-data="{
+        lastClickedId: null,
         cart: [],
 
         addToCart(id, name, price) {
             this.cart.push({ id, name, price });
+            this.lastClickedId = id;
         },
 
         removeFromCart(id) {
@@ -29,7 +31,8 @@
     <div class="grid grid-cols-3 gap-4">
         @foreach ($products as $product)
             <div
-                class="cursor-pointer rounded-md border p-3"
+                class="border rounded-md p-3 cursor-pointer"
+                :class="{ 'ring-2 ring-blue-500': lastClickedId === {{ $product->id }} }"
                 @click="addToCart({{ $product->id }}, '{{ $product->name }}', {{ $product->price }})"
             >
                 <p class="font-medium">{{ $product->name }}</p>
