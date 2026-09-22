@@ -36,6 +36,11 @@
                 <p class="text-sm text-slate-500">
                     Rp {{ number_format($product->price) }}
                 </p>
+                @if ($product->stock < 10)
+                    <span class="inline-block mt-2 px-2 py-1 text-xs rounded bg-amber-100 text-amber-700">
+                        Stok Menipis
+                    </span>
+                @endif
             </div>
         @endforeach
     </div>
