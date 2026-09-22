@@ -5,12 +5,20 @@
 @section('content')
 <h1 class="mb-4 text-lg font-semibold">Transaksi Kasir</h1>
 
-<div 
+<div
     x-data="{
         cart: [],
 
         addToCart(id, name, price) {
             this.cart.push({ id, name, price });
+        },
+
+        removeFromCart(id) {
+            const index = this.cart.findIndex(item => item.id === id);
+
+            if (index !== -1) {
+                this.cart.splice(index, 1);
+            }
         },
 
         subtotal() {
@@ -34,7 +42,17 @@
 
     <div class="mt-4 border-t pt-3">
         <template x-for="item in cart" :key="item.id">
-            <p x-text="item.name + ' - Rp ' + item.price"></p>
+            <div class="flex items-center justify-between py-1">
+                <p x-text="item.name + ' - Rp ' + item.price"></p>
+
+                <button
+                    type="button"
+                    @click="removeFromCart(item.id)"
+                    class="text-sm text-red-600 hover:underline"
+                >
+                    Hapus
+                </button>
+            </div>
         </template>
 
         <p class="mt-2 font-semibold">
