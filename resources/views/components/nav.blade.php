@@ -1,3 +1,4 @@
+<a href="{{ route('products.index') }}" class="hover:underline">Produk</a>
 <nav class="bg-slate-900 text-white px-6 py-3 flex items-center gap-6">
     <span class="font-semibold text-lg">
         Simple POS
