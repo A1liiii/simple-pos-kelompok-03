@@ -3,12 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany; // <--- Ditambahkan
 
 class Product extends Model
 {
-    public function category(): BelongsTo
+    public function transactions(): BelongsToMany
     {
-        return $this->belongsTo(Category::class);
-    }
+        return $this->belongsToMany(
+            Transaction::class,
+            'transaction_details',
+            'product_id',
+            'transaction_id'
+        );
+    } // <--- Ditambahkan kurung kurawal tutup
 }
