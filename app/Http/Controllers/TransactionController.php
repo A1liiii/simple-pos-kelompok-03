@@ -19,10 +19,11 @@ class TransactionController extends Controller
     {
         return 'Transaksi disimpan (belum ada logika penyimpanan)';
     }
-
     public function index()
     {
-        $transactions = Transaction::latest()->paginate(15);
+        $transactions = Transaction::with(['details.product', 'user'])
+            ->latest()
+            ->paginate(15);
 
         return view('transactions.index', compact('transactions'));
     }
