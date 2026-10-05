@@ -15,6 +15,10 @@
             <p class="text-sm mt-1">
                 Kasir: {{ $transaction->user->name }}
             </p>
+            <p class="text-sm mt-1">
+                Jumlah unit: {{ $transaction->details->sum('qty') }}
+            </p>
+
 
             <ul class="text-sm text-slate-500 mt-1">
                 @foreach ($transaction->details as $detail)
