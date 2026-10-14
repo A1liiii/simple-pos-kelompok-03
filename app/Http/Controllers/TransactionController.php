@@ -2,15 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
-
-use App\Models\Transaction;
-
 use App\Http\Requests\StoreTransactionRequest;
-
+use App\Models\Product;
+use App\Models\Transaction;
 use App\Models\TransactionDetail;
-
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class TransactionController extends Controller
 {
@@ -23,13 +20,31 @@ class TransactionController extends Controller
 
     public function store(StoreTransactionRequest $request)
     {
-            $validated = $request->validated();
+        $validated = $request->validated();
 
-            DB::transaction(function () use ($validated) {
-                $transaction = Transaction::create([
-                'user_id' => 1, // sementara di-hardcode, belum ada login sungguhan sampai Pertemuan 7
+        // Challenge 2: Validasi stok produk
+        $requestedQuantities = collect($validated['items'])
+            ->groupBy('product_id')
+            ->map(fn ($items) => $items->sum('qty'));
+
+        foreach ($requestedQuantities as $productId => $qty) {
+            $product = Product::findOrFail($productId);
+
+            if ($qty > $product->stock) {
+                throw ValidationException::withMessages([
+                    'items' => "Stok produk {$product->name} tidak mencukupi. "
+                        . "Stok tersedia: {$product->stock}, "
+                        . "jumlah diminta: {$qty}.",
+                ]);
+            }
+        }
+
+        DB::transaction(function () use ($validated) {
+            $transaction = Transaction::create([
+                'user_id' => 1, // Sementara di-hardcode sampai Pertemuan 7
                 'total' => 0,
             ]);
+
             $total = 0;
 
             foreach ($validated['items'] as $item) {
@@ -48,9 +63,9 @@ class TransactionController extends Controller
             $transaction->update(['total' => $total]);
         });
 
-            return redirect()
-                ->route('pos.create')
-                ->with('success', 'Transaksi berhasil disimpan.');
+        return redirect()
+            ->route('pos.create')
+            ->with('success', 'Transaksi berhasil disimpan.');
     }
 
     public function index()
