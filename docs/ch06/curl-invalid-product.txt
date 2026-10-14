@@ -1,0 +1,2 @@
+{"message":"The selected items.0.product_id is invalid.","errors":{"items.0.product_id":["The selected items.0.product_id is invalid."]}}
+HTTP_STATUS=422
