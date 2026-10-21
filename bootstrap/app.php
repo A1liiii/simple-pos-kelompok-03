@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureUserHasRole::class,
         ]);
+        $middleware->redirectUsersTo('/pos');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
