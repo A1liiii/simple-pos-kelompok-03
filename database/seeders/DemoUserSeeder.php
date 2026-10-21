@@ -1,4 +1,5 @@
 <?php
+
 namespace Database\Seeders;
 
 use App\Models\User;
@@ -15,6 +16,15 @@ class DemoUserSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'kasir@pos.test'],
             ['name' => 'Kasir Kafe', 'role' => 'kasir', 'password' => 'password'],
+        );
+        User::updateOrCreate(
+            ['email' => 'manager@pos.test'],
+            [
+                'name' => 'Manager Kafe',
+                'role' => 'manager',
+                'password' => 'password',
+                'is_active' => true,
+            ],
         );
     }
 }
