@@ -57,3 +57,63 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Pengujian Manual RBAC — Jobsheet 7
+
+### Prasyarat
+
+- Migrasi database sudah dijalankan.
+- DemoUserSeeder sudah dijalankan.
+- Server aplikasi dan Vite sudah berjalan.
+- Logout sebelum berganti akun.
+
+### Akun Demo Lokal
+
+| Peran | Email | Password |
+|---|---|---|
+| Admin | admin@pos.test | password |
+| Kasir | kasir@pos.test | password |
+| Manager | manager@pos.test | password |
+
+### Skenario 1 — Admin Mengakses Produk
+
+Langkah pengujian:
+
+1. Buka halaman `/login`.
+2. Masukkan email `admin@pos.test` dan password `password`.
+3. Klik Masuk.
+4. Buka `/products` melalui address bar.
+
+Hasil yang diharapkan:
+
+Halaman daftar produk tampil normal tanpa respons 403.
+
+### Skenario 2 — Kasir Ditolak Mengakses Produk
+
+Langkah pengujian:
+
+1. Logout dari akun sebelumnya.
+2. Login menggunakan `kasir@pos.test` dan password `password`.
+3. Buka `/products` melalui address bar.
+4. Setelah memeriksa penolakan akses, buka `/pos`.
+
+Hasil yang diharapkan:
+
+- `/products` menampilkan 403 dengan pesan
+  "Halaman ini hanya untuk peran admin."
+- `/pos` tetap dapat dibuka oleh kasir.
+
+### Skenario 3 — Manager Mengakses Transaksi
+
+Langkah pengujian:
+
+1. Logout dari akun sebelumnya.
+2. Login menggunakan `manager@pos.test` dan password `password`.
+3. Buka `/transactions`.
+4. Buka `/products` melalui address bar.
+
+Hasil yang diharapkan:
+
+- `/transactions` menampilkan daftar transaksi.
+- `/products` menampilkan 403 dengan pesan
+  "Halaman ini hanya untuk peran admin."
