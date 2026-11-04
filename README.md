@@ -117,3 +117,14 @@ Hasil yang diharapkan:
 - `/transactions` menampilkan daftar transaksi.
 - `/products` menampilkan 403 dengan pesan
   "Halaman ini hanya untuk peran admin."
+
+## Perbandingan: Import Manual vs Laravel Excel
+
+| Aspek | Import Manual (`fopen` / `str_getcsv`) | Laravel Excel (`ToModel`, `WithHeadingRow`, `WithChunkReading`) |
+|---|---|---|
+| **Keringkasan Kode** | Butuh banyak baris untuk validasi kolom, handling heading array, pemotongan baris, dan penanganan loop manual. | **Jauh lebih ringkas**. Pemisahan baris per chunk dan pembacaan heading ditangani otomatis via interface. |
+| **Kemudahan Kontrol** | **Jauh lebih mudah dikontrol**. Developer memiliki kendali penuh atas error handling per baris (`continue`), pelaporan jumlah baris sukses/gagal, validasi manual (`Validator::make`), dan manipulasi struktur array. | Kurang fleksibel jika butuh skip row kondisional tanpa melempar exception, atau saat mencatat row-row spesifik yang gagal masuk ke database. |
+
+**Kesimpulan:**
+- **Laravel Excel** unggul untuk kemudahan dan keringkasan kode pada dataset standar/bersih.
+- **Import Manual** lebih tepat jika sistem membutuhkan kontrol ketat terhadap validasi spesifik tiap baris, pelaporan error kustom, dan mekanisme penanganan baris cacat tanpa menghentikan proses import.
