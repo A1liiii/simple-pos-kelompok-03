@@ -8,11 +8,13 @@ use App\Exports\SalesReportExport;
 use App\Jobs\ProcessProductImport;
 use App\Models\Category; 
 use App\Models\Transaction;
+use App\Models\TransactionDetail;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -70,10 +72,30 @@ class ReportController extends Controller
         $categoryId = $request->integer('category_id'); 
         $query = $this->filteredQuery($from, $to, $categoryId); 
 
+        $topProducts = TransactionDetail::query()
+            ->join('transactions', 'transaction_details.transaction_id', '=', 'transactions.id')
+            ->join('products', 'transaction_details.product_id', '=', 'products.id')
+            ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
+            ->whereBetween('transactions.created_at', [$from, $to])
+            ->when($categoryId, function ($q) use ($categoryId) {
+                $q->where('products.category_id', $categoryId);
+            })
+            ->select(
+                'products.name',
+                'categories.name as category_name',
+                DB::raw('SUM(transaction_details.qty) as total_qty'),
+                DB::raw('SUM(transaction_details.subtotal) as total_pendapatan')
+            )
+            ->groupBy('products.id', 'products.name', 'categories.name')
+            ->orderByDesc('total_qty')
+            ->limit(10)
+            ->get();
+
         $pdf = Pdf::loadView('reports.pdf', [
             'totalPenjualan'  => $query->sum('total'), 
             'jumlahTransaksi' => $query->count(),      
             'transactions'    => $query->latest()->limit(50)->get(), 
+            'topProducts'     => $topProducts,
             'from'            => $from->toDateString(),
             'to'              => $to->toDateString(),
         ]);
