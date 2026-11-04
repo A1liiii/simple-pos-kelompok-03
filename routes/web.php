@@ -38,6 +38,8 @@ Route::middleware('auth')->group(function () {
             'importForm'])->name('import.create');
         Route::post('/import', [ReportController::class,
             'import'])->name('import.store');
+        Route::post('/import/excel', [ReportController::class,
+            'importExcel'])->name('import.excel');
     });
     18;
 });

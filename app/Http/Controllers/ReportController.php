@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\ProductsImport;
 use App\Models\ImportError;
 use App\Exports\SalesReportExport;
 use App\Jobs\ProcessProductImport;
@@ -121,4 +122,15 @@ class ReportController extends Controller
 
         return $query;
     }
+
+    public function importExcel(Request $request): RedirectResponse
+{
+    $request->validate([
+        'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xls'],
+    ]);
+
+    Excel::import(new ProductsImport, $request->file('file'));
+
+    return back()->with('success', 'Import produk via Laravel Excel berhasil.');
+}
 }
