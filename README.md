@@ -128,3 +128,63 @@ Hasil yang diharapkan:
 **Kesimpulan:**
 - **Laravel Excel** unggul untuk kemudahan dan keringkasan kode pada dataset standar/bersih.
 - **Import Manual** lebih tepat jika sistem membutuhkan kontrol ketat terhadap validasi spesifik tiap baris, pelaporan error kustom, dan mekanisme penanganan baris cacat tanpa menghentikan proses import.
+
+
+
+## Challenge 5 Jobsheet 9— Proses Lain yang Layak Menggunakan Queue
+
+### Proses yang Dipilih
+Pembuatan dan pengiriman laporan penjualan otomatis melalui email.
+
+### Alasan Menggunakan Queue
+
+Pada aplikasi Simple POS, admin dapat melihat dan
+mengekspor laporan penjualan dalam format CSV, Excel,
+dan PDF.
+
+Ketika jumlah transaksi semakin banyak, pembuatan
+laporan dapat membutuhkan waktu pemrosesan yang lama.
+
+Proses ini layak menggunakan Laravel Queue karena:
+
+1. Beban proses
+   Pembuatan laporan melibatkan pengambilan data
+   transaksi, perhitungan total penjualan, dan
+   pembuatan file laporan.
+
+2. Waktu tunggu pengguna
+   Dengan queue, admin tidak perlu menunggu proses
+   pembuatan dan pengiriman laporan selesai dalam
+   satu HTTP request.
+
+3. Mekanisme retry
+   Jika pengiriman email gagal akibat gangguan
+   jaringan atau layanan email, job dapat dicoba
+   kembali secara otomatis.
+
+### Rancangan Implementasi
+
+Proses dapat dibuat menggunakan job Laravel bernama
+GenerateAndSendSalesReport.
+
+Alur yang diusulkan:
+
+1. Admin meminta laporan penjualan.
+2. Aplikasi memvalidasi periode laporan.
+3. Sistem mengirim job ke database queue.
+4. Queue worker mengambil dan memproses job.
+5. Sistem menghasilkan file laporan.
+6. Laporan dikirim ke email admin.
+7. Jika gagal, Laravel menjalankan retry sesuai
+   konfigurasi job.
+
+### Kesimpulan
+
+Pembuatan dan pengiriman laporan penjualan otomatis
+merupakan kandidat yang sesuai untuk Laravel Queue
+karena dapat mengurangi waktu tunggu pengguna,
+memindahkan proses berat ke background, dan
+mendukung retry ketika terjadi kegagalan.
+
+Implementasi ini merupakan usulan pengembangan
+Simple POS dan belum diterapkan pada aplikasi.
