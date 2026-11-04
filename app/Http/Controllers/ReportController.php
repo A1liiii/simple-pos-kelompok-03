@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ImportError;
 use App\Exports\SalesReportExport;
 use App\Jobs\ProcessProductImport;
 use App\Models\Category; 
@@ -80,7 +81,11 @@ class ReportController extends Controller
 
     public function importForm(): View
     {
-        return view('reports.import');
+        $importErrors = ImportError::latest()->take(50)->get();
+
+        return view('reports.import', [
+            'importErrors' => $importErrors,
+        ]);
     }
 
     public function import(Request $request): RedirectResponse
