@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Product;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class ApiClientDemo extends Command
 {
@@ -28,7 +29,7 @@ class ApiClientDemo extends Command
         }
 
         $token = $login->json('token');
-        $this->info("Login berhasil, token: {$token}");
+        $this->info('Login berhasil.');
 
         $products = Http::acceptJson()
             ->withToken($token)
@@ -42,21 +43,67 @@ class ApiClientDemo extends Command
 
         $this->info('Jumlah produk: '.count($products->json('data')));
 
-        $productId = Product::first()->id;
+        $product = Product::first();
+
+        if (!$product) {
+            $this->error('Tidak ada produk untuk transaksi demo.');
+
+            return self::FAILURE;
+        }
+
+        $key = (string) Str::uuid();
+
+        $payload = [
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'qty' => 1,
+                ],
+            ],
+        ];
 
         $transaction = Http::acceptJson()
             ->withToken($token)
-            ->post("{$baseUrl}/api/transactions", [
-                'items' => [['product_id' => $productId, 'qty' => 1]],
-            ]);
+            ->withHeaders([
+                'Idempotency-Key' => $key,
+            ])
+            ->post("{$baseUrl}/api/transactions", $payload);
 
-        match ($transaction->status()) {
-            201 => $this->info('Transaksi tersimpan: '.json_encode($transaction->json('data'))),
-            401 => $this->error('Token tidak valid, login ulang.'),
-            422 => $this->error('Input ditolak: '.$transaction->json('message')),
-            default => $this->error('Error lain: '.$transaction->status()),
-        };
+        if ($transaction->status() !== 201) {
+            $this->error(
+                'Transaksi gagal: '.$transaction->status()
+                .' - '.$transaction->json('message')
+            );
 
-        return $transaction->status() === 201 ? self::SUCCESS : self::FAILURE;
+            return self::FAILURE;
+        }
+
+        $this->info(
+            'Transaksi tersimpan: '.json_encode($transaction->json('data'))
+        );
+
+        $replay = Http::acceptJson()
+            ->withToken($token)
+            ->withHeaders([
+                'Idempotency-Key' => $key,
+            ])
+            ->post("{$baseUrl}/api/transactions", $payload);
+
+        if (
+            $replay->status() !== 201 ||
+            $replay->header('Idempotent-Replayed') !== 'true' ||
+            $replay->json('data.id') !== $transaction->json('data.id')
+        ) {
+            $this->error('Replay idempotency gagal.');
+
+            return self::FAILURE;
+        }
+
+        $this->info(
+            'Replay transaksi: '.$replay->status()
+            .', replayed = true'
+        );
+
+        return self::SUCCESS;
     }
 }
