@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
-class EnsureIdempotencyKey
+class EnsureIdempotency
 {
     public function handle(Request $request, Closure $next): Response
     {
