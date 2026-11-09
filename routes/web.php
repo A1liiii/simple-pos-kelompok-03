@@ -5,6 +5,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\QuickCategoryController;
 
 Route::get('/', function () {
     return redirect()->route('pos.create');
@@ -40,6 +41,10 @@ Route::middleware('auth')->group(function () {
             'import'])->name('import.store');
         Route::post('/import/excel', [ReportController::class,
             'importExcel'])->name('import.excel');
+        Route::get('/quick-categories', [QuickCategoryController::class,
+         'index'])->name('quick-categories.index');
+        Route::post('/quick-categories', [QuickCategoryController::class,
+         'store'])->name('quick-categories.store');
     });
     18;
 });
