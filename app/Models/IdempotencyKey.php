@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 
 class IdempotencyKey extends Model
 {
+    use Prunable;
+
     protected $fillable = [
         'user_id',
         'key',
@@ -14,10 +18,11 @@ class IdempotencyKey extends Model
         'response_body',
     ];
 
-    protected function casts(): array
+    /**
+     * Tentukan kriteria record yang boleh dihapus otomatis.
+     */
+    public function prunable(): Builder
     {
-        return [
-            'response_body' => 'array',
-        ];
+        return static::where('created_at', '<=', now()->subHours(24));
     }
 }
