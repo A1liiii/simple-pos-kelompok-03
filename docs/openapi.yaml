@@ -36,6 +36,54 @@ paths:
   /api/products:
     get:
       summary: Ambil daftar produk
+      parameters:
+        - name: page
+          in: query
+          description: Nomor halaman
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+
+        - name: per_page
+          in: query
+          description: Jumlah produk per halaman
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 15
+
+        - name: category_id
+          in: query
+          description: Filter berdasarkan kategori
+          required: false
+          schema:
+            type: integer
+
+        - name: q
+          in: query
+          description: Pencarian berdasarkan nama produk
+          required: false
+          schema:
+            type: string
+            minLength: 2
+
+        - name: sort
+          in: query
+          description: Pengurutan produk
+          required: false
+          schema:
+            type: string
+            enum:
+              - name
+              - '-name'
+              - price
+              - '-price'
+            default: name
+
       security:
         - bearerAuth: []
       responses:
@@ -55,6 +103,22 @@ paths:
                         name: { type: string }
                         price: { type: integer }
                         category: { type: string }
+
+                  links:
+                    type: object
+                    properties:
+                      first: { type: string, nullable: true }
+                      last: { type: string, nullable: true }
+                      prev: { type: string, nullable: true }
+                      next: { type: string, nullable: true }
+
+                  meta:
+                    type: object
+                    properties:
+                      current_page: { type: integer }
+                      last_page: { type: integer }
+                      per_page: { type: integer }
+                      total: { type: integer }
         '401':
           description: Token tidak ada atau tidak valid
 
