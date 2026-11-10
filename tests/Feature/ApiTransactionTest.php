@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -30,7 +31,7 @@ class ApiTransactionTest extends TestCase
     public function test_guest_cannot_create_transaction(): void
     {
         // 401: Guest tanpa token tidak boleh membuat transaksi
-        $this->postJson('/api/transactions', $this->payload())
+        $this->postJson('/api/v1/transactions', $this->payload())
             ->assertUnauthorized();
     }
 
@@ -39,7 +40,7 @@ class ApiTransactionTest extends TestCase
         // 403: Token tanpa ability transactions:create ditolak
         Sanctum::actingAs(User::factory()->create(), ['products:read']);
 
-        $this->postJson('/api/transactions', $this->payload(), ['Idempotency-Key' => 'k1'])
+        $this->postJson('/api/v1/transactions', $this->payload(), ['Idempotency-Key' => 'k1'])
             ->assertForbidden();
     }
 
@@ -48,7 +49,7 @@ class ApiTransactionTest extends TestCase
         // 422: Validasi input gagal jika product_id tidak terdaftar
         Sanctum::actingAs(User::factory()->create(), ['transactions:create']);
 
-        $this->postJson('/api/transactions', [
+        $this->postJson('/api/v1/transactions', [
             'items' => [['product_id' => 99999, 'qty' => 1]],
         ], ['Idempotency-Key' => 'k2'])
             ->assertUnprocessable()
@@ -63,11 +64,11 @@ class ApiTransactionTest extends TestCase
         $payload = $this->payload();
         $headers = ['Idempotency-Key' => 'k3'];
 
-        $first = $this->postJson('/api/transactions', $payload, $headers)
+        $first = $this->postJson('/api/v1/transactions', $payload, $headers)
             ->assertCreated()
             ->assertJsonPath('data.total', 30000);
 
-        $this->postJson('/api/transactions', $payload, $headers)
+        $this->postJson('/api/v1/transactions', $payload, $headers)
             ->assertCreated()
             ->assertHeader('Idempotent-Replayed', 'true')
             ->assertJsonPath('data.id', $first->json('data.id'));
@@ -82,13 +83,42 @@ class ApiTransactionTest extends TestCase
         $transaction = Transaction::create(['user_id' => $owner->id, 'total' => 1000]);
 
         Sanctum::actingAs(User::factory()->create(), ['transactions:read']);
-        $this->getJson("/api/transactions/{$transaction->id}")
+        $this->getJson("/api/v1/transactions/{$transaction->id}")
             ->assertForbidden();
 
         // Pemilik transaksi boleh melihat datanya sendiri (200)
         Sanctum::actingAs($owner, ['transactions:read']);
-        $this->getJson("/api/transactions/{$transaction->id}")
+        $this->getJson("/api/v1/transactions/{$transaction->id}")
             ->assertOk()
             ->assertJsonPath('data.id', $transaction->id);
+    }
+
+        public function test_expired_token_returns_unauthorized(): void
+    {
+        // 1. Atur masa kedaluwarsa token Sanctum menjadi 60 menit
+        config(['sanctum.expiration' => 60]);
+
+        // 2. Kunci waktu awal pembuatan token
+        Carbon::setTestNow(Carbon::parse('2026-01-01 10:00:00'));
+
+        $user = User::factory()->create();
+        $token = $user->createToken('test', ['transactions:create'])->plainTextToken;
+
+        // Gunakan Sanctum::actingAs sesuai instruksi jobsheet
+        Sanctum::actingAs($user, ['transactions:create']);
+
+        // 3. Majukan waktu melampaui batas kedaluwarsa (2 jam kemudian)
+        Carbon::setTestNow(Carbon::parse('2026-01-01 12:00:00'));
+
+        // Reset mock guard agar request mengecek token asli yang sudah expired
+        auth()->forgetGuards();
+
+        // 4. Request dengan token yang sudah kedaluwarsa harus mengembalikan 401
+        $this->withToken($token)
+            ->postJson('/api/v1/transactions', $this->payload(), ['Idempotency-Key' => 'k-expired'])
+            ->assertUnauthorized();
+
+        // 5. Kembalikan waktu Carbon ke normal
+        Carbon::setTestNow();
     }
 }
