@@ -163,3 +163,10 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
+
+# Pengujian di Postman menghasilkan 200 OK untuk login kasir dan
+# pengambilan daftar produk, serta 201 Created untuk pembuatan transaksi.
+# Saat field product_id belum benar, respons 422 langsung menunjukkan
+# field yang perlu diperbaiki. Di Postman, token, header, dan body JSON
+# lebih mudah diperiksa karena punya tab masing-masing. Sementara itu,
+# curl lebih praktis untuk mengulang request yang sama dari terminal.
