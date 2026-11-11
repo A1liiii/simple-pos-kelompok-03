@@ -61,10 +61,9 @@ class EnsureIdempotency
                     ], 409);
                 }
 
-                return response()->json(
-                    $record->response_body,
-                    $record->response_status
-                )->header('Idempotent-Replayed', 'true');
+                return response($record->response_body, $record->response_status)
+                    ->header('Content-Type', 'application/json')
+                    ->header('Idempotent-Replayed', 'true');
             }
 
             $record = IdempotencyKey::create([
