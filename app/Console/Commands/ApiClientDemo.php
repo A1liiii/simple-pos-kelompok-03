@@ -15,15 +15,20 @@ class ApiClientDemo extends Command
 
     public function handle(): int
     {
-        $baseUrl = 'http://127.0.0.1:8000';
+        $baseUrl = 'http://127.0.0.1:8001';
 
+        $this->info('Mencoba login dengan kata sandi yang salah...');
+
+        // Simulasi login gagal dengan password salah
         $login = Http::acceptJson()->post("{$baseUrl}/api/v1/login", [
             'email' => 'kasir@pos.test',
-            'password' => 'password',
+            'password' => 'password-salah',
         ]);
 
+        // Verifikasi login gagal: cegah eksekusi lanjutan dengan token kosong/null
         if ($login->failed()) {
             $this->error('Login gagal: '.$login->json('message'));
+            $this->warn('Eksekusi dihentikan. Klien tidak melanjutkan dengan token kosong.');
 
             return self::FAILURE;
         }
